@@ -151,3 +151,50 @@ POST /plans
 
 ## Listar todos los planes:
 GET /plans
+
+
+# Extensión Parcial
+## Extensión de la API en este parcial
+
+En esta ampliación se extendió la API creada en el preparcial agregando nuevas funcionalidades para fortalecer su seguridad y capacidad operativa. Se añadió un endpoint protegido para permitir la eliminación controlada de países almacenados en caché, incluyendo validaciones para evitar borrar registros que aún tengan planes de viaje asociados. Además, se implementó un guard de autorización basado en un token enviado mediante el encabezado `x-auth-token`, restringiendo el acceso únicamente a solicitudes válidas.
+
+También se incorporó un middleware de logging aplicado a las rutas `/countries` y `/plans`, el cual registra el método HTTP, la ruta, el código de estado de la respuesta y el tiempo total de procesamiento. Esto mejora la trazabilidad de la API y permite monitorear su comportamiento en tiempo real.
+
+## Descripción y validación del endpoint protegido, guard y middleware
+
+### Endpoint protegido: `DELETE /countries/:code`
+Este endpoint permite eliminar un país previamente almacenado en caché.  
+Antes de borrar, el sistema verifica:
+1. Que el país exista en la base de datos.
+2. Que no existan planes de viaje asociados a ese país.
+
+Si alguna de estas condiciones falla, se devuelve un error adecuado (`404` o `400`).  
+Para validarlo, basta realizar un request DELETE a  
+`http://localhost:3000/countries/COL`  
+incluyendo el header `x-auth-token: parcial_1_token`.
+
+---
+### Guard de autorización
+El guard verifica que cada solicitud al endpoint de borrado incluya un token válido en el encabezado `x-auth-token`.  
+Si el header está ausente o el token es incorrecto:
+- se bloquea el acceso,
+- y el servidor responde con `401 Unauthorized` o `403 Forbidden`.
+
+Para validarlo:
+- enviar el DELETE sin el header → debe devolver 401.
+- enviar el DELETE con un token incorrecto → debe devolver 403.
+- enviar el DELETE con `x-auth-token: parcial_1_token` → debe ejecutarse normalmente.
+
+---
+
+### Middleware de logging
+Se implementó un middleware personalizado que registra información de cada request en las rutas `/countries` y `/plans`, incluyendo:
+- método HTTP,
+- ruta solicitada,
+- código de estado,
+- tiempo total de procesamiento.
+
+El registro se imprime en consola con el formato:
+
+[LOG] GET /countries/COL -> 304 (15 ms)
+[LOG] GET /countries -> 304 (2 ms)
